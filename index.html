@@ -24,7 +24,7 @@ nav b{font-weight:500;text-transform:capitalize}
 .hero{background:var(--hero);color:#fff;border-radius:20px;padding:22px}
 .hero small{display:block;opacity:.65;font-size:.8rem}
 .big{font-size:2.5rem;line-height:1.1;margin:2px 0 18px}
-.tres{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tres{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 h2{display:flex;justify-content:space-between;font-size:.9rem;font-weight:500;color:var(--soft);margin:26px 4px 6px}
 .lista{background:var(--card);border-radius:16px;overflow:hidden}
 .item{display:flex;align-items:center;gap:8px;padding-right:16px;border-top:1px solid var(--line)}
@@ -68,11 +68,10 @@ footer button{border:0;background:none;color:var(--soft);text-decoration:underli
     <button class="seta" id="prox" aria-label="Próximo mês">›</button>
   </nav>
   <section class="hero">
-    <small>Saldo atual</small>
+    <small>Saldo</small>
     <div class="big num" id="saldo"></div>
     <div class="tres">
-      <div><small>Previsto</small><span class="num" id="prev"></span></div>
-      <div><small>A receber</small><span class="num" id="rec"></span></div>
+      <div><small>Entradas</small><span class="num" id="rec"></span></div>
       <div><small>A pagar</small><span class="num" id="pag"></span></div>
     </div>
   </section>
@@ -141,17 +140,17 @@ function save(){
 function render(){
   const[y,mo]=M.split("-");
   $("mes").textContent=new Date(y,mo-1,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
-  const L=D.filter(i=>ativo(i,M)),ent=i=>i.tipo==="entrada",pg=i=>i.pg&&i.pg[M];
+  const L=D.filter(i=>ativo(i,M)),ent=i=>i.tipo==="entrada",pg=i=>i.tipo!=="entrada"&&i.pg&&i.pg[M];
   const s=f=>L.filter(f).reduce((t,i)=>t+val(i,M),0);
-  const E=s(ent),S=s(i=>!ent(i)),rec=s(i=>ent(i)&&pg(i)),pago=s(i=>!ent(i)&&pg(i));
-  $("saldo").textContent=brl(rec-pago);
-  $("saldo").style.color=rec-pago<0?"#FF9DB0":"#fff";
-  $("prev").textContent=brl(E-S);$("rec").textContent=brl(E-rec);$("pag").textContent=brl(S-pago);
+  const E=s(ent),S=s(i=>!ent(i)),pago=s(pg);
+  $("saldo").textContent=brl(E-pago);
+  $("saldo").style.color=E-pago<0?"#FF9DB0":"#fff";
+  $("rec").textContent=brl(E);$("pag").textContent=brl(S-pago);
   const h=SEC.map(([t,n])=>{
     const it=L.filter(i=>i.tipo===t);if(!it.length)return"";
     return `<h2><span>${n}</span><span class="num">${brl(it.reduce((a,i)=>a+val(i,M),0))}</span></h2><div class="lista">`+
       it.map(i=>`<div class="item ${pg(i)?"feito":""}">
-        <button class="ck ${pg(i)?"ok":""}" data-k="${esc(i.id)}" aria-label="${t==="entrada"?"Marcar como recebido":"Marcar como pago"}"><i></i></button>
+        ${t==="entrada"?`<span class="ck"></span>`:`<button class="ck ${pg(i)?"ok":""}" data-k="${esc(i.id)}" aria-label="Marcar como pago"><i></i></button>`}
         <button class="nome" data-e="${esc(i.id)}"><span>${esc(i.nome)}</span>${t==="parcelado"?`<small>${+i.atual+mi(M)-mi(i.ini)} de ${+i.total}</small>`:""}</button>
         <span class="v num ${t==="entrada"?"pos":"neg"}">${brl(val(i,M))}</span></div>`).join("")+"</div>"}).join("");
   $("lista").innerHTML=h||`<p class="vazio">Nada neste mês.<br>Toque em + para adicionar.</p>`}

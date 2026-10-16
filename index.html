@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16282D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Finanças">
+<link rel="apple-touch-icon" href="icone.png">
+<title>Finanças</title>
+<style>
+:root{--bg:#F1F4F3;--card:#fff;--ink:#16282D;--soft:#66797D;--line:#E0E7E5;--pos:#1F6F5C;--neg:#B03A52;--acc:#E3B23C;--hero:#16282D;color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root{--bg:#0F1B1F;--card:#17272C;--ink:#EAF0EE;--soft:#8FA2A6;--line:#26383D;--pos:#5FC4A6;--neg:#FF8FA5;--hero:#1D3238}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,sans-serif;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);-webkit-text-size-adjust:100%}
+main{max-width:520px;margin:0 auto;padding:8px 16px 120px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.num{font-family:ui-serif,Georgia,serif;font-variant-numeric:tabular-nums}
+nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+nav b{font-weight:500;text-transform:capitalize}
+.seta{width:44px;height:44px;border:0;background:none;font-size:1.7rem;color:var(--soft)}
+.hero{background:var(--hero);color:#fff;border-radius:20px;padding:22px}
+.hero small{display:block;opacity:.65;font-size:.8rem}
+.big{font-size:2.5rem;line-height:1.1;margin:2px 0 18px}
+.tres{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+h2{display:flex;justify-content:space-between;font-size:.9rem;font-weight:500;color:var(--soft);margin:26px 4px 6px}
+.lista{background:var(--card);border-radius:16px;overflow:hidden}
+.item{display:flex;align-items:center;gap:8px;padding-right:16px;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.ck{width:48px;height:48px;border:0;background:none;display:grid;place-items:center;flex:none}
+.ck i{width:22px;height:22px;border-radius:50%;border:2px solid var(--soft);opacity:.5;display:grid;place-items:center;font-style:normal;font-size:.75rem;color:#fff}
+.ck.ok i{background:var(--pos);border-color:var(--pos);opacity:1}
+.ck.ok i::after{content:"✓"}
+.nome{flex:1;min-width:0;text-align:left;border:0;background:none;padding:12px 0}
+.nome span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nome small{color:var(--soft);font-size:.8rem}
+.feito .nome,.feito .v{opacity:.45}
+.v{white-space:nowrap}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+.vazio{color:var(--soft);text-align:center;padding:56px 16px}
+.mais{position:fixed;right:max(20px,env(safe-area-inset-right));bottom:calc(env(safe-area-inset-bottom) + 20px);width:58px;height:58px;border-radius:50%;border:0;background:var(--acc);color:#16282D;font-size:2rem;box-shadow:0 6px 20px #0003}
+dialog{border:0;border-radius:22px;padding:22px;width:min(92vw,420px);background:var(--card);color:var(--ink)}
+dialog::backdrop{background:#0008}
+form{display:grid;gap:12px}
+h3{margin:0;font-weight:500}
+label{display:grid;gap:4px;font-size:.8rem;color:var(--soft)}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);font-size:16px}
+.par{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chk{display:flex;align-items:center;gap:10px;font-size:1rem;color:var(--ink)}
+.chk input{width:22px;height:22px}
+.dica{margin:0;font-size:.8rem;color:var(--soft)}
+.acoes{display:flex;gap:10px}
+.acoes button{flex:1;padding:13px;border:0;border-radius:12px;background:var(--line)}
+.acoes .p{background:var(--ink);color:var(--bg);font-weight:500}
+.acoes .ex{flex:none;background:none;color:var(--neg)}
+footer{margin-top:40px;text-align:center;color:var(--soft);font-size:.8rem}
+footer button{border:0;background:none;color:var(--soft);text-decoration:underline;font-size:.8rem;padding:8px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <nav>
+    <button class="seta" id="ant" aria-label="Mês anterior">‹</button>
+    <b id="mes"></b>
+    <button class="seta" id="prox" aria-label="Próximo mês">›</button>
+  </nav>
+  <section class="hero">
+    <small>Saldo atual</small>
+    <div class="big num" id="saldo"></div>
+    <div class="tres">
+      <div><small>Previsto</small><span class="num" id="prev"></span></div>
+      <div><small>A receber</small><span class="num" id="rec"></span></div>
+      <div><small>A pagar</small><span class="num" id="pag"></span></div>
+    </div>
+  </section>
+  <div id="lista"></div>
+  <footer>
+    Seus dados ficam só neste aparelho e não são enviados a ninguém.<br>
+    <button id="exp">Salvar backup</button><button id="imp">Restaurar backup</button><button id="lim">Apagar tudo</button>
+    <input type="file" id="arq" accept="application/json,.json" hidden>
+  </footer>
+</main>
+<button class="mais" id="novo" aria-label="Novo lançamento">+</button>
+
+<dialog id="dlg">
+  <form id="f">
+    <h3 id="titulo"></h3>
+    <label>Tipo
+      <select id="tipo">
+        <option value="entrada">Entrada</option>
+        <option value="fixo">Despesa fixa</option>
+        <option value="parcelado">Compra parcelada</option>
+        <option value="variavel">Gasto variável</option>
+        <option value="invest">Investimento</option>
+      </select>
+    </label>
+    <label>Nome<input id="nome" maxlength="60" autocomplete="off"></label>
+    <label><span id="rv">Valor</span><input id="valor" inputmode="decimal" placeholder="0,00" autocomplete="off"></label>
+    <div class="par" id="parc" hidden>
+      <label>Parcela deste mês<input id="atual" type="number" min="1" value="1" inputmode="numeric"></label>
+      <label>Total de parcelas<input id="total" type="number" min="1" inputmode="numeric"></label>
+    </div>
+    <label class="chk" id="repw"><input type="checkbox" id="rep"> Repetir todo mês</label>
+    <p class="dica" id="aviso" hidden></p>
+    <div class="acoes">
+      <button type="button" class="ex" id="del" hidden>Excluir</button>
+      <button type="button" id="cancel">Cancelar</button>
+      <button class="p">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const K="financas:v2",$=id=>document.getElementById(id);
+const SEC=[["entrada","Entradas"],["fixo","Despesas fixas"],["parcelado","Parceladas"],["variavel","Variáveis"],["invest","Investimentos"]];
+const brl=n=>(+n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const esc=s=>String(s).replace(/[&<>"']/g,c=>"&#"+c.charCodeAt(0)+";");
+const mi=m=>{const[a,b]=m.split("-");return a*12+ +b-1};
+const fm=n=>Math.floor(n/12)+"-"+String(n%12+1).padStart(2,"0");
+const hoje=new Date();
+let D=[],M=fm(hoje.getFullYear()*12+hoje.getMonth()),ed=null;
+try{D=JSON.parse(localStorage.getItem(K))||[]}catch{}
+
+function num(s){s=s.replace(/[^\d.,]/g,"");
+  if(s.includes(","))s=s.replace(/\./g,"").replace(",",".");
+  else if(!/^\d+\.\d{1,2}$/.test(s))s=s.replace(/\./g,"");
+  return parseFloat(s)}
+const ativo=(i,m)=>{const x=mi(m),a=mi(i.ini);
+  if(x<a||(i.fim&&x>mi(i.fim)))return false;
+  if(i.tipo==="parcelado")return i.atual+x-a<=i.total;
+  return i.rep||x===a};
+const val=(i,m)=>(i.vig||[]).reduce((v,e)=>mi(e.de)<=mi(m)?e.valor:v,i.valor);
+
+function save(){
+  try{localStorage.setItem(K,JSON.stringify(D))}catch{alert("Não foi possível salvar neste navegador.")}
+  render()}
+
+function render(){
+  const[y,mo]=M.split("-");
+  $("mes").textContent=new Date(y,mo-1,1).toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
+  const L=D.filter(i=>ativo(i,M)),ent=i=>i.tipo==="entrada",pg=i=>i.pg&&i.pg[M];
+  const s=f=>L.filter(f).reduce((t,i)=>t+val(i,M),0);
+  const E=s(ent),S=s(i=>!ent(i)),rec=s(i=>ent(i)&&pg(i)),pago=s(i=>!ent(i)&&pg(i));
+  $("saldo").textContent=brl(rec-pago);
+  $("saldo").style.color=rec-pago<0?"#FF9DB0":"#fff";
+  $("prev").textContent=brl(E-S);$("rec").textContent=brl(E-rec);$("pag").textContent=brl(S-pago);
+  const h=SEC.map(([t,n])=>{
+    const it=L.filter(i=>i.tipo===t);if(!it.length)return"";
+    return `<h2><span>${n}</span><span class="num">${brl(it.reduce((a,i)=>a+val(i,M),0))}</span></h2><div class="lista">`+
+      it.map(i=>`<div class="item ${pg(i)?"feito":""}">
+        <button class="ck ${pg(i)?"ok":""}" data-k="${esc(i.id)}" aria-label="${t==="entrada"?"Marcar como recebido":"Marcar como pago"}"><i></i></button>
+        <button class="nome" data-e="${esc(i.id)}"><span>${esc(i.nome)}</span>${t==="parcelado"?`<small>${+i.atual+mi(M)-mi(i.ini)} de ${+i.total}</small>`:""}</button>
+        <span class="v num ${t==="entrada"?"pos":"neg"}">${brl(val(i,M))}</span></div>`).join("")+"</div>"}).join("");
+  $("lista").innerHTML=h||`<p class="vazio">Nada neste mês.<br>Toque em + para adicionar.</p>`}
+
+$("lista").onclick=e=>{
+  const k=e.target.closest("[data-k]"),b=e.target.closest("[data-e]");
+  if(k){const i=D.find(x=>x.id===k.dataset.k);i.pg=i.pg||{};
+    if(i.pg[M])delete i.pg[M];else i.pg[M]=1;save()}
+  else if(b)abrir(D.find(x=>x.id===b.dataset.e))};
+
+function campos(){
+  const t=$("tipo").value,p=t==="parcelado",r=["entrada","fixo","invest"].includes(t);
+  $("parc").hidden=!p||!!ed;$("repw").hidden=!r||!!ed;
+  $("rv").textContent=p?"Valor da parcela":"Valor";
+  if(!ed&&r)$("rep").checked=t!=="invest"}
+
+function abrir(i){
+  ed=i||null;
+  $("titulo").textContent=i?"Editar":"Novo lançamento";
+  $("tipo").value=i?i.tipo:"variavel";$("tipo").disabled=!!i;
+  $("nome").value=i?i.nome:"";
+  $("valor").value=i?String(val(i,M)).replace(".",","):"";
+  $("atual").value=1;$("total").value="";
+  $("del").hidden=!i;
+  const rec=i&&(i.rep||i.tipo==="parcelado");
+  $("aviso").hidden=!rec;
+  if(rec)$("aviso").textContent="O novo valor vale de "+$("mes").textContent+" em diante. Os meses anteriores não mudam.";
+  campos();$("dlg").showModal()}
+
+$("f").onsubmit=e=>{
+  e.preventDefault();
+  const nome=$("nome").value.trim(),v=num($("valor").value);
+  if(!nome||!(v>0))return alert("Informe um nome e um valor maior que zero.");
+  if(ed){
+    ed.nome=nome;
+    if(ed.rep||ed.tipo==="parcelado"){
+      ed.vig=(ed.vig||[]).filter(x=>x.de!==M);ed.vig.push({de:M,valor:v});
+      ed.vig.sort((a,b)=>mi(a.de)-mi(b.de))}
+    else ed.valor=v}
+  else{
+    const t=$("tipo").value,a=parseInt($("atual").value)||1,tot=parseInt($("total").value)||0;
+    if(t==="parcelado"&&tot<a)return alert("O total de parcelas deve ser igual ou maior que a parcela deste mês.");
+    D.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),tipo:t,nome,valor:v,ini:M,
+      rep:$("repw").hidden?false:$("rep").checked,atual:a,total:tot,vig:[],pg:{}})}
+  $("dlg").close();save()};
+
+$("del").onclick=()=>{
+  const rec=ed.rep||ed.tipo==="parcelado";
+  if(!confirm(rec?`Remover "${ed.nome}" de ${$("mes").textContent} em diante? Os meses anteriores continuam.`:`Excluir "${ed.nome}"?`))return;
+  if(rec&&mi(ed.ini)<mi(M))ed.fim=fm(mi(M)-1);else D=D.filter(x=>x!==ed);
+  $("dlg").close();save()};
+
+$("novo").onclick=()=>abrir();
+$("tipo").onchange=campos;
+$("cancel").onclick=()=>$("dlg").close();
+$("ant").onclick=()=>{M=fm(mi(M)-1);render()};
+$("prox").onclick=()=>{M=fm(mi(M)+1);render()};
+
+$("exp").onclick=async()=>{
+  const f=new File([JSON.stringify(D)],"financas-backup.json",{type:"application/json"});
+  try{if(navigator.canShare&&navigator.canShare({files:[f]}))return await navigator.share({files:[f]})}catch{return}
+  const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=f.name;a.click()};
+$("imp").onclick=()=>$("arq").click();
+$("arq").onchange=async e=>{
+  const f=e.target.files[0];e.target.value="";if(!f)return;
+  try{
+    const d=JSON.parse(await f.text());
+    const ok=i=>i&&SEC.some(s=>s[0]===i.tipo)&&/^\d{4}-\d\d$/.test(i.ini)&&Number.isFinite(i.valor)&&typeof i.nome==="string"&&typeof i.id==="string";
+    if(!Array.isArray(d)||!d.every(ok))throw 0;
+    if(confirm("Substituir os dados atuais pelo backup?")){D=d;save()}
+  }catch{alert("Arquivo de backup inválido.")}};
+$("lim").onclick=()=>{if(confirm("Apagar todos os dados deste aparelho? Isso não pode ser desfeito.")){D=[];save()}};
+
+render();
+</script>
+</body>
+</html>

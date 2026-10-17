@@ -176,7 +176,7 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
       </div>
     </div>
     <div id="meses"></div>
-    <p class="dica" style="margin:10px 4px">Toque num mês para abri-lo. Meses que ainda não chegaram contam só o que foi lançado neles; entradas e despesas que se repetem entram quando o mês chega.</p>
+    <p class="dica" style="margin:10px 4px">Toque num mês para abri-lo. Meses que ainda não chegaram mostram o que já está previsto: entradas e despesas marcadas para repetir todo mês e as parcelas que ainda faltam. Gastos variáveis e do cartão entram quando forem lançados.</p>
   </section>
 
   <section data-t="mais">
@@ -284,7 +284,7 @@ function save(){
   try{localStorage.setItem(K,JSON.stringify(D))}catch{alert("Não foi possível salvar neste navegador.")}
   render()}
 
-function render(){
+function render(){EX=[];
   const y=M.slice(0,4);
   $("mes").textContent=nmes(M,{month:"long",year:"numeric"});
   $("tit").innerHTML=T==="mais"?"Mais":T==="ano"?AY+" <small>resumo anual</small>":nmes(M,{month:"long"})+" <small>"+y+"</small>";
@@ -349,8 +349,8 @@ function render(){
   // resumo anual
   let tE=0,tS=0;const hm=fm(hoje.getFullYear()*12+hoje.getMonth());
   $("meses").innerHTML=Array.from({length:12},(_,k)=>{
-    const m=AY+"-"+String(k+1).padStart(2,"0"),ok=mi(m)<=mi(hm)?()=>true:i=>i.ini===m,okE=i=>i.ini===m,e=soma(m,i=>ent(i)&&okE(i)),sa=soma(m,i=>!ent(i)&&ok(i)),vz=!e&&!sa;tE+=e;tS+=sa;
-    return `<button class="r mrow ${m===M?"cur":""} ${vz?"vz":""}" data-mm="${m}"><span class="t"><span class="cap">${nmes(m,{month:"long"})}</span><small>${vz?"Sem lançamentos":"Entradas "+brl(e)+" · Saídas "+brl(sa)}</small></span>${vz?"":`<b class="num ${e-sa<0?"neg":"pos"}">${brl(e-sa)}</b>`}</button>`}).join("");
+    const m=AY+"-"+String(k+1).padStart(2,"0"),e=soma(m,ent),sa=soma(m,i=>!ent(i)),vz=!e&&!sa;tE+=e;tS+=sa;
+    return `<button class="r mrow ${m===M?"cur":""} ${vz?"vz":""}" data-mm="${m}"><span class="t"><span class="cap">${nmes(m,{month:"long"})}</span><small>${vz?"Sem lançamentos":(m>hm?"Previsto · ":"")+"Entradas "+brl(e)+" · Saídas "+brl(sa)}</small></span>${vz?"":`<b class="num ${e-sa<0?"neg":"pos"}">${brl(e-sa)}</b>`}</button>`}).join("");
   $("aent").textContent=brl(tE);$("asai").textContent=brl(tS);$("asaldo").textContent=brl(tE-tS);$("asaldo").style.color=tE-tS<0?"var(--neg)":"";
 
   // análise do mês (enxuta)
@@ -384,7 +384,7 @@ function campos(){
   $("rv").textContent=p?"Valor da parcela":"Valor";
   if(!ed&&r)$("rep").checked=t!=="cofrinho"}
 
-function abrir(i){
+function abrir(i){EX=[];
   ed=i||null;
   $("titulo").textContent=i?"Editar":"Novo lançamento";
   $("tipo").value=i?i.tipo:"variavel";$("tipo").disabled=!!i;
@@ -475,7 +475,7 @@ $("arqo").onchange=async e=>{
     $("mimp").value=/^\d{6}/.test(fim)?fim.slice(0,4)+"-"+fim.slice(4,6):M;
     const np=PI.filter(p=>!p.c).length;
     $("rimp").textContent=np+" parceladas e "+(PI.length-np)+" gastos no cartão. As categorias foram sugeridas pelo nome; você pode ajustar depois.";
-    fillCard($("cimps"),cartoes().length===1?cartoes()[0]:"");listaImp();$("dimp").showModal();
+    EX=[];fillCard($("cimps"),cartoes().length===1?cartoes()[0]:"");listaImp();$("dimp").showModal();
   }catch{alert("Não consegui ler este arquivo. Use o arquivo .ofx baixado do banco.")}};
 $("fimp").onsubmit=e=>{
   e.preventDefault();
@@ -498,9 +498,9 @@ $("donut").onclick=e=>{
   if(!x)return;
   OP=OP===x[0]?"":x[0];render()};
 const cf=i=>i.tipo!=="cartao"||!CF||(CF==="__sem"?!i.cartao:i.cartao===CF);
-const CK="financas:cartoes";let EX=[];try{EX=JSON.parse(localStorage.getItem(CK))||[]}catch{}
+const CK="financas:cartoes";let EX=[];try{localStorage.removeItem(CK)}catch{}
 const cartoes=()=>[...new Set([...D.map(i=>i.cartao).filter(Boolean),...EX])].sort((a,b)=>a.localeCompare(b,"pt-BR"));
-function addCard(n){if(!cartoes().includes(n)){EX.push(n);try{localStorage.setItem(CK,JSON.stringify(EX))}catch{}}}
+function addCard(n){if(!cartoes().includes(n))EX.push(n)}
 function fillCard(sel,v){
   sel.innerHTML='<option value="">Sem cartão definido</option>'+cartoes().map(c=>`<option>${esc(c)}</option>`).join("")+'<option value="__novo">＋ Novo cartão…</option>';
   sel.value=v||"";if(sel.value!==(v||""))sel.value="";sel.dataset.p=sel.value}

@@ -61,8 +61,14 @@ h1 small{font:.8rem system-ui,sans-serif;letter-spacing:.08em;color:var(--soft)}
 .donut b{display:block;color:var(--ink);font-weight:500;font-size:1.05rem}
 .lgb{width:100%;border:0}
 .lgb em{font-style:normal;color:var(--soft)}
+.box{background:var(--card);border-radius:22px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 10px #5b4a9a0f}
+.mont{padding:16px}
+.mont small{display:block;color:var(--soft);font-size:.8rem}
+.mont b{display:block;font:500 2rem ui-serif,"New York",Georgia,serif;margin:2px 0}
 .lgb{scroll-margin-top:16px}
-.donut{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.donut{position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tip{position:absolute;transform:translate(-50%,-50%);border:0;border-radius:16px;padding:8px 12px;background:var(--card);color:var(--ink);box-shadow:0 6px 18px #5b4a9a45;font-weight:600;font-size:.85rem;white-space:nowrap;text-align:center;line-height:1.25}
+.tip small{display:block;font-weight:400;color:var(--soft);font-size:.75rem}
 .an{background:var(--card);border-radius:22px;padding:16px;margin:0 0 14px;box-shadow:0 2px 10px #5b4a9a0f}
 .an h4{margin:0 0 10px;font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);font-weight:600}
 .term{display:flex;align-items:baseline;gap:8px}
@@ -139,7 +145,7 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
   </section>
 
   <section data-t="graf">
-    <div class="donut" id="donut"><div><span>Total<b class="num" id="dtot"></b></span></div></div>
+    <div class="donut" id="donut"><div><span>Total<b class="num" id="dtot"></b></span></div><button class="tip" id="dtip" hidden></button></div>
     <div id="analise"></div>
     <div id="leg"></div>
     <p class="dica" style="margin:10px 4px">Toque no gráfico ou numa categoria para ver os gastos dela; toque num gasto para editar. Não inclui entradas nem cofrinho.</p>
@@ -287,6 +293,8 @@ function render(){
   const h=SEC.map(([t,n])=>{
     const all=L.filter(i=>i.tipo===t);if(!all.length)return"";const it=all.filter(cf);
     const fc=FC[t];
+    if(t==="entrada"){const nn=it.length;
+      return `<div class="sh"><button class="chip" data-s="${t}" style="background:${SC[t]}">${n} (${nn}) ${fc?"▸":"▾"}</button></div>`+(fc?"":`<div class="box"><div class="mont"><small>Disponível</small><b class="num ${E-pago<0?"neg":"pos"}">${brl(E-pago)}</b><small>${pago?`de ${brl(E)} · ${brl(pago)} já pagos`:`${nn} ${nn>1?"entradas":"entrada"}`}</small></div>`+it.map(i=>`<button class="di" data-e="${esc(i.id)}"><span>${esc(i.nome)}</span><b class="num pos">${brl(val(i,M))}</b></button>`).join("")+`</div>`)}
     return `<div class="sh"><button class="chip" data-s="${t}" style="background:${SC[t]}">${n} (${it.length}) ${fc?"▸":"▾"}</button><span class="num">${brl(t==="entrada"?E-pago:it.reduce((a,i)=>a+val(i,M),0))}</span></div>`+(!fc?chips(t):"")+(!fc&&(t==="parcelado"||t==="cartao")?`<button class="all" data-a="${t}"><span class="t"><span>Marcar todas como pagas</span><small>${it.filter(i=>pg(i)).length} de ${it.length} pagas</small></span><span class="ck ${it.every(i=>pg(i))?"ok":""}"><i></i></span></button>`:"")+(fc?"":it.map(i=>{
       let rv=val(i,M);if(t==="entrada"){const u=i===it[it.length-1]?pool:Math.min(pool,rv);rv-=u;pool-=u}
       const sub=[t==="parcelado"?`${+i.atual+mi(M)-mi(i.ini)} de ${+i.total}`:"",t==="entrada"&&rv!==val(i,M)?"de "+brl(val(i,M)):"",t==="cartao"?i.cartao||"":"",t==="cartao"&&i.cartao&&i.cat==="Cartão de crédito"?"":i.cat||""].filter(Boolean).join(" · "),ic=ico(i);
@@ -303,7 +311,9 @@ function render(){
   let ac=0;
   DA=[];const cg=A.map(([c,g])=>{const a=ac/TT*100;ac+=g.v;DA.push([c,a/100,ac/TT]);const k=OP&&G[OP]&&c!==OP?cor(c)+"66":cor(c);return `${k} ${a}% ${ac/TT*100}%`}).join(",");
   $("donut").style.background=TT?`conic-gradient(${cg})`:"var(--line)";
-  const sel=OP&&G[OP];$("dtot").previousSibling.textContent=sel?OP:"Total";$("dtot").textContent=brl(sel?G[OP].v:TT);
+  const sel=OP&&G[OP];$("dtot").textContent=brl(TT);
+  const tip=$("dtip"),zz=sel&&DA.find(q=>q[0]===OP);
+  if(zz){const th=(zz[1]+zz[2])*Math.PI;tip.style.left=(105+85*Math.sin(th))+"px";tip.style.top=(105-85*Math.cos(th))+"px";tip.innerHTML=`${CE[OP]||"🏷️"} ${esc(OP)}<small>${brl(G[OP].v)} · ver gastos ›</small>`;tip.hidden=false}else tip.hidden=true;
   $("leg").innerHTML=A.length?A.map(([c,g])=>{
     const op=OP===c,n=g.it.length;
     return `<button class="r lgb" data-c="${esc(c)}"><span class="ic" style="background:${cor(c)}33">${CE[c]||"🏷️"}</span><span class="t"><span>${esc(c)}</span><small>${n} ${n>1?"lançamentos":"lançamento"} · ${Math.round(g.v/TT*100)}%</small></span><b class="num">${brl(g.v)}</b><em>${op?"▾":"▸"}</em></button>`+
@@ -443,15 +453,16 @@ $("fimp").onsubmit=e=>{
   if(n){M=f;T="lanc";save()}};
 
 let OP="",OR="",FC={},CF="",DA=[];
+const irLista=()=>{const el=[...$("leg").querySelectorAll("[data-c]")].find(b=>b.dataset.c===OP);if(el)el.scrollIntoView({behavior:"smooth",block:"start"})};
 $("donut").onclick=e=>{
+  if(e.target.closest("#dtip")){irLista();return}
   const r=$("donut").getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,d=Math.hypot(dx,dy);
   if(d>r.width/2)return;
   if(d<r.width*.31){OP="";render();return}
   let a=Math.atan2(dx,-dy);if(a<0)a+=2*Math.PI;
   const f=a/(2*Math.PI),x=DA.find(z=>f>=z[1]&&f<z[2]);
   if(!x)return;
-  OP=OP===x[0]?"":x[0];render();
-  if(OP){const el=[...$("leg").querySelectorAll("[data-c]")].find(b=>b.dataset.c===OP);if(el)el.scrollIntoView({behavior:"smooth",block:"start"})}};
+  OP=OP===x[0]?"":x[0];render()};
 const cf=i=>i.tipo!=="cartao"||!CF||(CF==="__sem"?!i.cartao:i.cartao===CF);
 const CK="financas:cartoes";let EX=[];try{EX=JSON.parse(localStorage.getItem(CK))||[]}catch{}
 const cartoes=()=>[...new Set([...D.map(i=>i.cartao).filter(Boolean),...EX])].sort((a,b)=>a.localeCompare(b,"pt-BR"));

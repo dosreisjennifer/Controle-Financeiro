@@ -258,14 +258,16 @@ function render(){
     return it.length?`<div class="r"><span class="ic" style="background:${c}33">${e}</span><span class="t"><span>${SN[t]}</span><small>${it.length} ${it.length>1?"lançamentos":"lançamento"}</small></span><span class="num neg">${brl(it.reduce((a,i)=>a+val(i,M),0))}</span></div>`:""}).join("")||`<p class="vazio">Nada neste mês.</p>`;
 
   // lançamentos
+  let pool=pago;
   const h=SEC.map(([t,n])=>{
     const it=L.filter(i=>i.tipo===t);if(!it.length)return"";
     const fc=FC[t];
-    return `<div class="sh"><button class="chip" data-s="${t}" style="background:${SC[t]}">${n} (${it.length}) ${fc?"▸":"▾"}</button><span class="num">${brl(it.reduce((a,i)=>a+val(i,M),0))}</span></div>`+(!fc&&(t==="parcelado"||t==="cartao")?`<button class="all" data-a="${t}"><span class="t"><span>Marcar todas como pagas</span><small>${it.filter(i=>pg(i)).length} de ${it.length} pagas</small></span><span class="ck ${it.every(i=>pg(i))?"ok":""}"><i></i></span></button>`:"")+(fc?"":it.map(i=>{
-      const sub=[t==="parcelado"?`${+i.atual+mi(M)-mi(i.ini)} de ${+i.total}`:"",i.cat||""].filter(Boolean).join(" · "),ic=ico(i);
+    return `<div class="sh"><button class="chip" data-s="${t}" style="background:${SC[t]}">${n} (${it.length}) ${fc?"▸":"▾"}</button><span class="num">${brl(t==="entrada"?E-pago:it.reduce((a,i)=>a+val(i,M),0))}</span></div>`+(!fc&&(t==="parcelado"||t==="cartao")?`<button class="all" data-a="${t}"><span class="t"><span>Marcar todas como pagas</span><small>${it.filter(i=>pg(i)).length} de ${it.length} pagas</small></span><span class="ck ${it.every(i=>pg(i))?"ok":""}"><i></i></span></button>`:"")+(fc?"":it.map(i=>{
+      let rv=val(i,M);if(t==="entrada"){const u=i===it[it.length-1]?pool:Math.min(pool,rv);rv-=u;pool-=u}
+      const sub=[t==="parcelado"?`${+i.atual+mi(M)-mi(i.ini)} de ${+i.total}`:"",t==="entrada"&&rv!==val(i,M)?"de "+brl(val(i,M)):"",i.cat||""].filter(Boolean).join(" · "),ic=ico(i);
       return `<div class="r ${pg(i)?"feito":""}"><span class="ic" style="background:${ic[1]}33">${ic[0]}</span>
         <button class="nome t" data-e="${esc(i.id)}"><span>${esc(i.nome)}</span>${sub?`<small>${esc(sub)}</small>`:""}</button>
-        <span class="v num ${t==="entrada"?"pos":"neg"}">${brl(val(i,M))}</span>
+        <span class="v num ${t==="entrada"&&rv>=0?"pos":"neg"}">${brl(rv)}</span>
         ${t==="entrada"?"":`<button class="ck ${pg(i)?"ok":""}" data-k="${esc(i.id)}" aria-label="Marcar como pago"><i></i></button>`}</div>`}).join(""))}).join("");
   $("lista").innerHTML=h||`<p class="vazio">Nada neste mês.<br>Toque em ＋ Novo para adicionar.</p>`;
 

@@ -252,8 +252,8 @@ function render(){
   $("pvs").textContent="Entradas "+brl(ne)+" · Saídas "+brl(ns);
   $("pvx").textContent="Não inclui o cartão de crédito.";
 
-  // resumo (início): só fixas e parceladas
-  $("resumo").innerHTML=[["fixo","📌","#8E7CE0"],["parcelado","🧾","#F2994A"]].map(([t,e,c])=>{
+  // resumo (início): fixas, parceladas e cartão
+  $("resumo").innerHTML=[["fixo","📌","#8E7CE0"],["parcelado","🧾","#F2994A"],["cartao","💳","#5B8DEF"]].map(([t,e,c])=>{
     const it=L.filter(i=>i.tipo===t);
     return it.length?`<div class="r"><span class="ic" style="background:${c}33">${e}</span><span class="t"><span>${SN[t]}</span><small>${it.length} ${it.length>1?"lançamentos":"lançamento"}</small></span><span class="num neg">${brl(it.reduce((a,i)=>a+val(i,M),0))}</span></div>`:""}).join("")||`<p class="vazio">Nada neste mês.</p>`;
 

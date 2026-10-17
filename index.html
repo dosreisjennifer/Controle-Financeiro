@@ -295,7 +295,7 @@ function render(){EX=[];
   const L=D.filter(i=>ativo(i,M)),ent=i=>i.tipo==="entrada",pg=i=>!ent(i)&&i.pg&&i.pg[M];
   const s=f=>L.filter(f).reduce((t,i)=>t+val(i,M),0);
   const E=s(ent),S=s(i=>!ent(i)),pago=s(pg);
-  $("saldo").textContent=brl(E-pago);$("saldo").style.color=(E-pago<0||S>E)?"var(--neg)":"";$("salx").textContent=S>E?"Faltam "+brl(S-E)+" para cobrir tudo.":"";
+  $("saldo").textContent=brl(E-S);$("saldo").style.color=E-S<0?"var(--neg)":"";$("salx").textContent="";
   $("rec").textContent=brl(E);$("pag").textContent=brl(S-pago);
 
   // previsão do próximo mês

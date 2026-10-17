@@ -65,6 +65,10 @@ h1 small{font:.8rem system-ui,sans-serif;letter-spacing:.08em;color:var(--soft)}
 .di{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;border:0;border-top:1px solid var(--line);background:none;padding:13px 16px;text-align:left}
 .di:first-child{border-top:0}
 .di small{display:block;color:var(--soft);font-size:.8rem}
+.di.feito{opacity:.5}
+.cs{display:flex;gap:8px;overflow-x:auto;margin:0 0 10px;padding-bottom:2px}
+.cs button{flex:none;border:0;border-radius:999px;padding:8px 14px;background:var(--card);font-size:.85rem;font-weight:500}
+.cs button.on{background:var(--ink);color:var(--bg)}
 .cfg{display:block;width:100%;text-align:left;border:0;background:var(--card);border-radius:22px;padding:16px;margin-bottom:10px}
 .cfg.neg{color:var(--neg)}
 #tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 12px);width:min(calc(100% - 28px),420px);display:flex;gap:4px;padding:8px;border-radius:999px;background:var(--pill);border:1px solid var(--line);box-shadow:0 10px 30px #5b4a9a2e;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:5}
@@ -160,6 +164,7 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
     <label>Nome<input id="nome" maxlength="60" autocomplete="off"></label>
     <label><span id="rv">Valor</span><input id="valor" inputmode="decimal" placeholder="0,00" autocomplete="off"></label>
     <label id="catw">Categoria<select id="cat"></select></label>
+    <label id="cartw" hidden>Cartão<select id="cartao"></select></label>
     <div class="par" id="parc" hidden>
       <label>Parcela deste mês<input id="atual" type="number" min="1" value="1" inputmode="numeric"></label>
       <label>Total de parcelas<input id="total" type="number" min="1" inputmode="numeric"></label>
@@ -179,6 +184,7 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
     <h3>Fatura do cartão</h3>
     <p class="dica" id="rimp"></p>
     <label>Mês em que a fatura será paga<input type="month" id="mimp"></label>
+    <label>Cartão desta fatura<select id="cimps"></select></label>
     <div id="limp"></div>
     <div class="acoes"><button type="button" id="cimp">Cancelar</button><button class="p">Lançar selecionadas</button></div>
   </form>
@@ -255,16 +261,22 @@ function render(){
   // resumo (início): fixas, parceladas e cartão
   $("resumo").innerHTML=[["fixo","📌","#8E7CE0"],["parcelado","🧾","#F2994A"],["cartao","💳","#5B8DEF"]].map(([t,e,c])=>{
     const it=L.filter(i=>i.tipo===t);
-    return it.length?`<div class="r"><span class="ic" style="background:${c}33">${e}</span><span class="t"><span>${SN[t]}</span><small>${it.length} ${it.length>1?"lançamentos":"lançamento"}</small></span><span class="num neg">${brl(it.reduce((a,i)=>a+val(i,M),0))}</span></div>`:""}).join("")||`<p class="vazio">Nada neste mês.</p>`;
+    return it.length?`<button class="r lgb" data-r="${t}"><span class="ic" style="background:${c}33">${e}</span><span class="t"><span>${SN[t]}</span><small>${it.length} ${it.length>1?"lançamentos":"lançamento"}</small></span><span class="num neg">${brl(it.reduce((a,i)=>a+val(i,M),0))}</span><em>${OR===t?"▾":"▸"}</em></button>`+
+      (OR===t?`<div class="det">`+it.slice().sort((a,b)=>val(b,M)-val(a,M)).map(i=>{
+        const sub=[t==="parcelado"?`${+i.atual+mi(M)-mi(i.ini)} de ${+i.total}`:"",t==="cartao"?i.cartao||"":"",t==="cartao"&&i.cartao&&i.cat==="Cartão de crédito"?"":i.cat||""].filter(Boolean).join(" · ");
+        return `<button class="di ${pg(i)?"feito":""}" data-e="${esc(i.id)}"><span>${esc(i.nome)}${sub?`<small>${esc(sub)}</small>`:""}</span><b class="num neg">${brl(val(i,M))}</b></button>`}).join("")+`</div>`:""):""}).join("")||`<p class="vazio">Nada neste mês.</p>`;
 
   // lançamentos
+  const cs=cartoes(),nsem=L.filter(i=>i.tipo==="cartao"&&!i.cartao).length;
+  if(CF&&CF!=="__sem"&&!cs.includes(CF)||CF==="__sem"&&!nsem)CF="";
+  const chips=t=>t!=="cartao"?"":(cs.length?`<div class="cs">`+[["","Todos"],...cs.map(c=>[c,c]),...(nsem?[["__sem","Sem cartão"]]:[])].map(([v,l])=>`<button data-cf="${esc(v)}" class="${CF===v?"on":""}">${esc(l)}</button>`).join("")+`</div>`:"")+(nsem?`<button class="all" data-d="1"><span class="t"><span>Definir o cartão dos lançamentos sem cartão</span><small>${nsem} ${nsem>1?"lançamentos":"lançamento"}</small></span></button>`:"");
   let pool=pago;
   const h=SEC.map(([t,n])=>{
-    const it=L.filter(i=>i.tipo===t);if(!it.length)return"";
+    const all=L.filter(i=>i.tipo===t);if(!all.length)return"";const it=all.filter(cf);
     const fc=FC[t];
-    return `<div class="sh"><button class="chip" data-s="${t}" style="background:${SC[t]}">${n} (${it.length}) ${fc?"▸":"▾"}</button><span class="num">${brl(t==="entrada"?E-pago:it.reduce((a,i)=>a+val(i,M),0))}</span></div>`+(!fc&&(t==="parcelado"||t==="cartao")?`<button class="all" data-a="${t}"><span class="t"><span>Marcar todas como pagas</span><small>${it.filter(i=>pg(i)).length} de ${it.length} pagas</small></span><span class="ck ${it.every(i=>pg(i))?"ok":""}"><i></i></span></button>`:"")+(fc?"":it.map(i=>{
+    return `<div class="sh"><button class="chip" data-s="${t}" style="background:${SC[t]}">${n} (${it.length}) ${fc?"▸":"▾"}</button><span class="num">${brl(t==="entrada"?E-pago:it.reduce((a,i)=>a+val(i,M),0))}</span></div>`+(!fc?chips(t):"")+(!fc&&(t==="parcelado"||t==="cartao")?`<button class="all" data-a="${t}"><span class="t"><span>Marcar todas como pagas</span><small>${it.filter(i=>pg(i)).length} de ${it.length} pagas</small></span><span class="ck ${it.every(i=>pg(i))?"ok":""}"><i></i></span></button>`:"")+(fc?"":it.map(i=>{
       let rv=val(i,M);if(t==="entrada"){const u=i===it[it.length-1]?pool:Math.min(pool,rv);rv-=u;pool-=u}
-      const sub=[t==="parcelado"?`${+i.atual+mi(M)-mi(i.ini)} de ${+i.total}`:"",t==="entrada"&&rv!==val(i,M)?"de "+brl(val(i,M)):"",i.cat||""].filter(Boolean).join(" · "),ic=ico(i);
+      const sub=[t==="parcelado"?`${+i.atual+mi(M)-mi(i.ini)} de ${+i.total}`:"",t==="entrada"&&rv!==val(i,M)?"de "+brl(val(i,M)):"",t==="cartao"?i.cartao||"":"",t==="cartao"&&i.cartao&&i.cat==="Cartão de crédito"?"":i.cat||""].filter(Boolean).join(" · "),ic=ico(i);
       return `<div class="r ${pg(i)?"feito":""}"><span class="ic" style="background:${ic[1]}33">${ic[0]}</span>
         <button class="nome t" data-e="${esc(i.id)}"><span>${esc(i.nome)}</span>${sub?`<small>${esc(sub)}</small>`:""}</button>
         <span class="v num ${t==="entrada"&&rv>=0?"pos":"neg"}">${brl(rv)}</span>
@@ -295,6 +307,7 @@ function campos(){
   const t=$("tipo").value,p=t==="parcelado",r=["entrada","fixo","cofrinho"].includes(t);
   $("parc").hidden=!p||!!ed;$("repw").hidden=!r||!!ed;
   $("catw").hidden=t==="entrada"||t==="cofrinho";
+  $("cartw").hidden=t!=="cartao";
   if(!ed&&t==="cartao"&&!$("cat").value)$("cat").value="Cartão de crédito";
   $("rv").textContent=p?"Valor da parcela":"Valor";
   if(!ed&&r)$("rep").checked=t!=="cofrinho"}
@@ -306,6 +319,7 @@ function abrir(i){
   $("nome").value=i?i.nome:"";
   $("valor").value=i?String(val(i,M)).replace(".",","):"";
   $("cat").value=i&&i.cat&&CC[i.cat]?i.cat:"";
+  fillCard($("cartao"),i?i.cartao:(CF&&CF!=="__sem"?CF:""));
   $("atual").value=1;$("total").value="";
   $("del").hidden=!i;
   const rec=i&&(i.rep||i.tipo==="parcelado");
@@ -318,7 +332,7 @@ $("f").onsubmit=e=>{
   const nome=$("nome").value.trim(),v=num($("valor").value),cat=$("catw").hidden?"":($("cat").value||($("tipo").value==="cartao"?"Cartão de crédito":""));
   if(!nome||!(v>0))return alert("Informe um nome e um valor maior que zero.");
   if(ed){
-    ed.nome=nome;ed.cat=cat;
+    ed.nome=nome;ed.cat=cat;if(ed.tipo==="cartao")ed.cartao=$("cartao").value;
     if(ed.rep||ed.tipo==="parcelado"){
       ed.vig=(ed.vig||[]).filter(x=>x.de!==M);ed.vig.push({de:M,valor:v});
       ed.vig.sort((a,b)=>mi(a.de)-mi(b.de))}
@@ -327,7 +341,7 @@ $("f").onsubmit=e=>{
     const t=$("tipo").value,a=parseInt($("atual").value)||1,tot=parseInt($("total").value)||0;
     if(t==="parcelado"&&tot<a)return alert("O total de parcelas deve ser igual ou maior que a parcela deste mês.");
     D.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),tipo:t,nome,valor:v,ini:M,cat,
-      rep:$("repw").hidden?false:$("rep").checked,atual:a,total:tot,vig:[],pg:{}})}
+      rep:$("repw").hidden?false:$("rep").checked,atual:a,total:tot,vig:[],pg:{},cartao:t==="cartao"?$("cartao").value:""})}
   $("dlg").close();save()};
 
 $("del").onclick=()=>{
@@ -359,7 +373,7 @@ $("lim").onclick=()=>{if(confirm("Apagar todos os dados deste aparelho? Isso nã
 // importação da fatura: parceladas -> "Despesas parceladas"; o resto -> "Cartão de crédito"
 let PI=[];
 const dupl=(p,f)=>p.c
-  ?D.some(x=>x.tipo==="cartao"&&x.ini===f&&x.valor===p.v&&String(x.nome).toLowerCase()===p.nome.toLowerCase())
+  ?D.some(x=>x.tipo==="cartao"&&x.ini===f&&x.valor===p.v&&(!x.cartao||x.cartao===$("cimps").value)&&String(x.nome).toLowerCase()===p.nome.toLowerCase())
   :D.some(x=>x.tipo==="parcelado"&&String(x.nome).toLowerCase()===p.nome.toLowerCase()&&+x.total===p.tot&&+x.atual+mi(f)-mi(x.ini)===p.at);
 function listaImp(){
   const f=$("mimp").value||M;
@@ -389,27 +403,47 @@ $("arqo").onchange=async e=>{
     $("mimp").value=/^\d{6}/.test(fim)?fim.slice(0,4)+"-"+fim.slice(4,6):M;
     const np=PI.filter(p=>!p.c).length;
     $("rimp").textContent=np+" parceladas e "+(PI.length-np)+" gastos no cartão. As categorias foram sugeridas pelo nome; você pode ajustar depois.";
-    listaImp();$("dimp").showModal();
+    fillCard($("cimps"),cartoes().length===1?cartoes()[0]:"");listaImp();$("dimp").showModal();
   }catch{alert("Não consegui ler este arquivo. Use o arquivo .ofx baixado do banco.")}};
 $("fimp").onsubmit=e=>{
   e.preventDefault();
   const f=$("mimp").value||M;let n=0;
   $("limp").querySelectorAll("input:checked").forEach(c=>{
     const p=PI[c.dataset.i];
-    D.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),tipo:p.c?"cartao":"parcelado",nome:p.nome,valor:p.v,ini:f,cat:p.cat||"",rep:false,atual:p.c?1:p.at,total:p.c?0:p.tot,vig:[],pg:{}});n++});
+    D.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),tipo:p.c?"cartao":"parcelado",nome:p.nome,valor:p.v,ini:f,cat:p.cat||"",rep:false,atual:p.c?1:p.at,total:p.c?0:p.tot,vig:[],pg:{},cartao:p.c?$("cimps").value:""});n++});
   $("dimp").close();
   if(n){M=f;T="lanc";save()}};
 
-let OP="",FC={};
+let OP="",OR="",FC={},CF="";
+const cf=i=>i.tipo!=="cartao"||!CF||(CF==="__sem"?!i.cartao:i.cartao===CF);
+const CK="financas:cartoes";let EX=[];try{EX=JSON.parse(localStorage.getItem(CK))||[]}catch{}
+const cartoes=()=>[...new Set([...D.map(i=>i.cartao).filter(Boolean),...EX])].sort((a,b)=>a.localeCompare(b,"pt-BR"));
+function addCard(n){if(!cartoes().includes(n)){EX.push(n);try{localStorage.setItem(CK,JSON.stringify(EX))}catch{}}}
+function fillCard(sel,v){
+  sel.innerHTML='<option value="">Sem cartão definido</option>'+cartoes().map(c=>`<option>${esc(c)}</option>`).join("")+'<option value="__novo">＋ Novo cartão…</option>';
+  sel.value=v||"";if(sel.value!==(v||""))sel.value="";sel.dataset.p=sel.value}
+["cartao","cimps"].forEach(id=>$(id).onchange=function(){
+  if(this.value==="__novo"){const n=(prompt("Nome do cartão (ex.: Nubank, Itaú Visa)")||"").trim().slice(0,30);
+    if(n){addCard(n);fillCard(this,n)}else this.value=this.dataset.p||""}
+  else this.dataset.p=this.value;
+  if(id==="cimps")listaImp()});
+$("resumo").onclick=e=>{
+  const b=e.target.closest("[data-e]"),r=e.target.closest("[data-r]");
+  if(b)abrir(D.find(x=>x.id===b.dataset.e));
+  else if(r){OR=OR===r.dataset.r?"":r.dataset.r;render()}};
 $("strip").onclick=e=>{const b=e.target.closest("[data-m]");if(b){M=b.dataset.m;render()}};
 $("leg").onclick=e=>{
   const b=e.target.closest("[data-e]"),c=e.target.closest("[data-c]");
   if(b)abrir(D.find(x=>x.id===b.dataset.e));
   else if(c){OP=OP===c.dataset.c?"":c.dataset.c;render()}};
 $("lista").addEventListener("click",e=>{
-  const b=e.target.closest("[data-s]"),a=e.target.closest("[data-a]");
+  const b=e.target.closest("[data-s]"),a=e.target.closest("[data-a]"),f=e.target.closest("[data-cf]"),d=e.target.closest("[data-d]");
   if(b){FC[b.dataset.s]=!FC[b.dataset.s];render()}
-  else if(a){const it=D.filter(i=>i.tipo===a.dataset.a&&ativo(i,M)),todos=it.every(i=>i.pg&&i.pg[M]);
+  else if(f){CF=f.dataset.cf;render()}
+  else if(d){const sem=D.filter(i=>i.tipo==="cartao"&&ativo(i,M)&&!i.cartao);
+    const n=(prompt("Qual cartão para os "+sem.length+" lançamentos sem cartão? Ex.: Nubank")||"").trim().slice(0,30);
+    if(n){addCard(n);sem.forEach(i=>i.cartao=n);save()}}
+  else if(a){const it=D.filter(i=>i.tipo===a.dataset.a&&ativo(i,M)&&cf(i)),todos=it.every(i=>i.pg&&i.pg[M]);
     it.forEach(i=>{i.pg=i.pg||{};if(todos)delete i.pg[M];else i.pg[M]=1});save()}});
 
 render();

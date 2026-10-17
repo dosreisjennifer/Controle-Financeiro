@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Finanças">
-<link rel="apple-touch-icon" href="icone-v2.png">
-<link rel="icon" href="icone-v2.png">
+<link rel="apple-touch-icon" href="icone-v3.png">
+<link rel="icon" href="icone-v3.png">
 <title>Finanças</title>
 <style>
 :root{--bg:#FBFAFD;--g1:#E3DAFB;--card:#fff;--in:#F4F1FB;--ink:#1F1B2E;--soft:#767190;--line:#EBE7F5;--pos:#2E7D5B;--neg:#C2415F;--c1:#E4DBFB;--c2:#E8EBA8;--pill:#ffffffcc;--sel:#1f1b2e12;color-scheme:light dark}
@@ -22,7 +22,9 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .num,h1,.big,.strip b{font-family:ui-serif,"New York",Georgia,serif;font-variant-numeric:tabular-nums}
 header{display:flex;align-items:center;justify-content:space-between;margin:6px 0 14px}
 h1{font-size:2.5rem;font-weight:500;line-height:1.05;margin:0;text-transform:capitalize}
-h1 small{font:.8rem system-ui,sans-serif;letter-spacing:.08em;color:var(--soft)}
+h1 small{font:.8rem system-ui,sans-serif;letter-spacing:.08em;color:var(--soft);text-transform:uppercase}
+.ypill{display:flex;gap:4px;padding:4px 8px}
+.ypill button{width:44px;height:44px;border:0;border-radius:50%;background:none;font-size:1.6rem;color:var(--ink)}
 .pill{border:1px solid var(--line);background:var(--pill);border-radius:999px;padding:12px 20px;font-weight:500;box-shadow:0 4px 14px #5b4a9a1f;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .strip{display:flex;gap:4px;margin-bottom:22px}
 .strip button{flex:1;border:0;background:none;padding:8px 0 12px;border-radius:18px;display:grid;justify-items:center;color:var(--soft);position:relative}
@@ -128,6 +130,7 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
   <header id="nav">
     <h1 id="tit"></h1>
     <button class="pill" id="novo">＋ Novo</button>
+    <div class="pill ypill" id="ynav" hidden><button data-y="-1" aria-label="Ano anterior">‹</button><button data-y="1" aria-label="Próximo ano">›</button></div>
   </header>
   <b id="mes" hidden></b>
   <div class="strip" id="strip"></div>
@@ -164,7 +167,6 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
   </section>
 
   <section data-t="ano">
-    <div class="ynav" id="ynav"><button data-y="-1" aria-label="Ano anterior">‹</button><b class="num" id="yr"></b><button data-y="1" aria-label="Próximo ano">›</button></div>
     <div class="card c1">
       <small>Saldo do ano</small>
       <div class="big num" id="asaldo"></div>
@@ -174,7 +176,7 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
       </div>
     </div>
     <div id="meses"></div>
-    <p class="dica" style="margin:10px 4px">Toque num mês para abri-lo. Meses futuros mostram só o que já está lançado (fixas, parcelas e recorrentes).</p>
+    <p class="dica" style="margin:10px 4px">Toque num mês para abri-lo. Meses que ainda não chegaram contam só o que foi lançado neles; entradas e despesas que se repetem entram quando o mês chega.</p>
   </section>
 
   <section data-t="mais">
@@ -285,8 +287,8 @@ function save(){
 function render(){
   const y=M.slice(0,4);
   $("mes").textContent=nmes(M,{month:"long",year:"numeric"});
-  $("tit").innerHTML=T==="mais"?"Mais":T==="ano"?"Resumo anual":nmes(M,{month:"long"})+" <small>"+y+"</small>";
-  $("strip").hidden=T==="mais"||T==="ano";$("novo").hidden=T==="mais"||T==="graf"||T==="ano";
+  $("tit").innerHTML=T==="mais"?"Mais":T==="ano"?AY+" <small>resumo anual</small>":nmes(M,{month:"long"})+" <small>"+y+"</small>";
+  $("ynav").hidden=T!=="ano";$("strip").hidden=T==="mais"||T==="ano";$("novo").hidden=T==="mais"||T==="graf"||T==="ano";
   $("strip").innerHTML=[-2,-1,0,1,2].map(d=>{const m=fm(mi(M)+d);return `<button data-m="${m}" class="${d?"":"on"}"><small>${m.slice(0,4)}</small><b>${nmes(m,{month:"short"}).replace(".","")}</b></button>`}).join("");
   document.querySelectorAll("[data-t]").forEach(s=>s.hidden=s.dataset.t!==T);
   document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.g===T));
@@ -345,10 +347,9 @@ function render(){
     return `<div class="r${OP===c?" sel":""}"><span class="ic" style="background:${cor(c)}33">${CE[c]||"🏷️"}</span><span class="t"><span>${esc(c)}</span><small>${n} ${n>1?"lançamentos":"lançamento"} · ${Math.round(g.v/TT*100)}%</small></span><b class="num">${brl(g.v)}</b></div>`}).join(""):`<p class="vazio">Sem gastos neste mês.</p>`;
 
   // resumo anual
-  $("yr").textContent=AY;
-  let tE=0,tS=0;
+  let tE=0,tS=0;const hm=fm(hoje.getFullYear()*12+hoje.getMonth());
   $("meses").innerHTML=Array.from({length:12},(_,k)=>{
-    const m=AY+"-"+String(k+1).padStart(2,"0"),e=soma(m,ent),sa=soma(m,i=>!ent(i)),vz=!e&&!sa;tE+=e;tS+=sa;
+    const m=AY+"-"+String(k+1).padStart(2,"0"),ok=mi(m)<=mi(hm)?()=>true:i=>i.ini===m,e=soma(m,i=>ent(i)&&ok(i)),sa=soma(m,i=>!ent(i)&&ok(i)),vz=!e&&!sa;tE+=e;tS+=sa;
     return `<button class="r mrow ${m===M?"cur":""} ${vz?"vz":""}" data-mm="${m}"><span class="t"><span class="cap">${nmes(m,{month:"long"})}</span><small>${vz?"Sem lançamentos":"Entradas "+brl(e)+" · Saídas "+brl(sa)}</small></span>${vz?"":`<b class="num ${e-sa<0?"neg":"pos"}">${brl(e-sa)}</b>`}</button>`}).join("");
   $("aent").textContent=brl(tE);$("asai").textContent=brl(tS);$("asaldo").textContent=brl(tE-tS);$("asaldo").style.color=tE-tS<0?"var(--neg)":"";
 

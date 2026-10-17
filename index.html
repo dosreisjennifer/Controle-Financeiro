@@ -317,7 +317,7 @@ function render(){
   // lançamentos
   const cs=cartoes(),nsem=L.filter(i=>i.tipo==="cartao"&&!i.cartao).length;
   if(CF&&CF!=="__sem"&&!cs.includes(CF)||CF==="__sem"&&!nsem)CF="";
-  const chips=t=>t!=="cartao"?"":(cs.length?`<div class="cs">`+[["","Todos"],...cs.map(c=>[c,c]),...(nsem?[["__sem","Sem cartão"]]:[])].map(([v,l])=>`<button data-cf="${esc(v)}" class="${CF===v?"on":""}">${esc(l)}</button>`).join("")+`</div>`:"")+(nsem?`<button class="all" data-d="1"><span class="t"><span>Definir o cartão dos lançamentos sem cartão</span><small>${nsem} ${nsem>1?"lançamentos":"lançamento"}</small></span></button>`:"");
+  const chips=t=>t!=="cartao"?"":(cs.length>1?`<div class="cs">`+[["","Todos"],...cs.map(c=>[c,c]),...(nsem?[["__sem","Sem cartão"]]:[])].map(([v,l])=>`<button data-cf="${esc(v)}" class="${CF===v?"on":""}">${esc(l)}</button>`).join("")+`</div>`:"")+(nsem?`<button class="all" data-d="1"><span class="t"><span>Definir o cartão dos lançamentos sem cartão</span><small>${nsem} ${nsem>1?"lançamentos":"lançamento"}</small></span></button>`:"");
   let pool=pago;
   const h=SEC.map(([t,n])=>{
     const all=L.filter(i=>i.tipo===t);if(!all.length)return"";const it=all.filter(cf);
@@ -349,7 +349,7 @@ function render(){
   // resumo anual
   let tE=0,tS=0;const hm=fm(hoje.getFullYear()*12+hoje.getMonth());
   $("meses").innerHTML=Array.from({length:12},(_,k)=>{
-    const m=AY+"-"+String(k+1).padStart(2,"0"),ok=mi(m)<=mi(hm)?()=>true:i=>i.ini===m,e=soma(m,i=>ent(i)&&ok(i)),sa=soma(m,i=>!ent(i)&&ok(i)),vz=!e&&!sa;tE+=e;tS+=sa;
+    const m=AY+"-"+String(k+1).padStart(2,"0"),ok=mi(m)<=mi(hm)?()=>true:i=>i.ini===m,okE=i=>i.ini===m,e=soma(m,i=>ent(i)&&okE(i)),sa=soma(m,i=>!ent(i)&&ok(i)),vz=!e&&!sa;tE+=e;tS+=sa;
     return `<button class="r mrow ${m===M?"cur":""} ${vz?"vz":""}" data-mm="${m}"><span class="t"><span class="cap">${nmes(m,{month:"long"})}</span><small>${vz?"Sem lançamentos":"Entradas "+brl(e)+" · Saídas "+brl(sa)}</small></span>${vz?"":`<b class="num ${e-sa<0?"neg":"pos"}">${brl(e-sa)}</b>`}</button>`}).join("");
   $("aent").textContent=brl(tE);$("asai").textContent=brl(tS);$("asaldo").textContent=brl(tE-tS);$("asaldo").style.color=tE-tS<0?"var(--neg)":"";
 

@@ -38,6 +38,8 @@ h1 small{font:.8rem system-ui,sans-serif;letter-spacing:.08em;color:var(--soft)}
 .tres{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .sh{display:flex;align-items:center;justify-content:space-between;margin:22px 0 10px}
 .sh .num{font-size:.95rem;color:var(--soft)}
+.all{text-align:right;margin:-2px 0 10px}
+.all button{border:0;background:var(--sel);border-radius:999px;padding:8px 14px;font-size:.8rem;font-weight:600;color:var(--ink)}
 .chip{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:10px 16px;font-size:.74rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
 .r{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:22px;padding:12px 16px;margin-bottom:10px;box-shadow:0 2px 10px #5b4a9a0f;text-align:left}
 .ic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:1.3rem;flex:none}
@@ -128,7 +130,6 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
   </section>
 
   <section data-t="mais">
-    <button class="cfg" id="sug">✨ Sugerir categorias para os lançamentos sem categoria</button>
     <button class="cfg" id="exp">Salvar backup</button>
     <button class="cfg" id="imp">Restaurar backup</button>
     <button class="cfg neg" id="lim">Apagar tudo</button>
@@ -187,13 +188,13 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
 <script>
 const K="financas:v2",$=id=>document.getElementById(id);
 const SEC=[["entrada","Entradas"],["fixo","Despesas fixas"],["parcelado","Despesas parceladas"],["cartao","Cartão de crédito"],["variavel","Variáveis"],["cofrinho","Cofrinho"]];
-const CATS=[["Moradia","#5B8DEF","🏠"],["Contas","#8E9AAF","💡"],["Alimentação","#F2994A","🛒"],["iFood","#E5484D","🍔"],["Transporte","#9B72CF","🚗"],["Farmácia","#2FBF8F","💊"],["Saúde","#EB7BA5","🩺"],["Educação","#2D9CDB","📚"],["Assinaturas","#E3B23C","📺"],["Lazer","#B7C94B","🎉"],["Compras","#1F6F5C","🛍️"],["Outros","#A1887F","✨"]];
+const CATS=[["Moradia","#5B8DEF","🏠"],["Contas","#8E9AAF","💡"],["Alimentação","#F2994A","🛒"],["iFood","#E5484D","🍔"],["Transporte","#9B72CF","🚗"],["Farmácia","#2FBF8F","💊"],["Saúde","#EB7BA5","🩺"],["Educação","#2D9CDB","📚"],["Assinaturas","#E3B23C","📺"],["Lazer","#B7C94B","🎉"],["Compras","#1F6F5C","🛍️"],["Dívida","#B5385C","💸"],["Cartão de crédito","#3F51B5","💳"],["Outros","#A1887F","✨"]];
 const CE=Object.fromEntries(CATS.map(c=>[c[0],c[2]])),SN=Object.fromEntries(SEC);
 const SC={entrada:"#4CAF8040",fixo:"#8E7CE040",parcelado:"#F2994A40",cartao:"#5B8DEF40",variavel:"#E3B23C40",cofrinho:"#E58BB540"};
 const cor=c=>CC[c]||"#B8C4C2";
 const ico=i=>i.tipo==="entrada"?["💰","#4CAF80"]:i.tipo==="cofrinho"?["🐷","#E58BB5"]:[CE[i.cat]||"🏷️",cor(i.cat||"")];
 const CC=Object.fromEntries(CATS);
-const KW=[["iFood",/ifood/],["Farmácia",/farm|drog|raia|pacheco|panvel|pague menos|venancio/],
+const KW=[["iFood",/ifood/],["Dívida",/renegoc|emprestimo|financiamento|divida|consignado|pendenc/],["Farmácia",/farm|drog|raia|pacheco|panvel|pague menos|venancio/],
 ["Assinaturas",/netflix|spotify|prime video|disney|hbo|\bmax\b|youtube|icloud|apple\.com|google|deezer|globoplay|assinatura/],
 ["Compras",/amazon|shopee|mercado ?livre|magalu|shein|americanas|renner|zara|aliexpress/],
 ["Alimentação",/rappi|restaur|mercado|market|padaria|lanch|burger|pizza|acai|atacad|carrefour|assai|cafe/],
@@ -245,12 +246,12 @@ function render(){
   $("rec").textContent=brl(E);$("pag").textContent=brl(S-pago);
 
   // previsão do próximo mês
-  const N=fm(mi(M)+1),ne=soma(N,ent),ns=soma(N,i=>!ent(i));
-  const cn=soma(N,i=>i.tipo==="cartao"),ce=cn?0:s(i=>i.tipo==="cartao"),pv=ne-ns-ce;
+  const N=fm(mi(M)+1),ne=soma(N,ent),ns=soma(N,i=>!ent(i)&&i.tipo!=="cartao");
+  const pv=ne-ns;
   $("pvm").textContent=nmes(N,{month:"long"});
   $("pvv").textContent=brl(pv);$("pvv").style.color=pv<0?"var(--neg)":"";
-  $("pvs").textContent="Entradas "+brl(ne)+" · Saídas "+brl(ns+ce);
-  $("pvx").textContent=ce?"Inclui "+brl(ce)+" de cartão estimado (igual ao mês atual).":"";
+  $("pvs").textContent="Entradas "+brl(ne)+" · Saídas "+brl(ns);
+  $("pvx").textContent="Não inclui o cartão de crédito.";
 
   // resumo (início): só fixas e parceladas
   $("resumo").innerHTML=[["fixo","📌","#8E7CE0"],["parcelado","🧾","#F2994A"]].map(([t,e,c])=>{
@@ -261,7 +262,7 @@ function render(){
   const h=SEC.map(([t,n])=>{
     const it=L.filter(i=>i.tipo===t);if(!it.length)return"";
     const fc=FC[t];
-    return `<div class="sh"><button class="chip" data-s="${t}" style="background:${SC[t]}">${n} (${it.length}) ${fc?"▸":"▾"}</button><span class="num">${brl(it.reduce((a,i)=>a+val(i,M),0))}</span></div>`+(fc?"":it.map(i=>{
+    return `<div class="sh"><button class="chip" data-s="${t}" style="background:${SC[t]}">${n} (${it.length}) ${fc?"▸":"▾"}</button><span class="num">${brl(it.reduce((a,i)=>a+val(i,M),0))}</span></div>`+(!fc&&(t==="parcelado"||t==="cartao")?`<div class="all"><button data-a="${t}">${it.every(i=>pg(i))?"Desmarcar todas":"✓ Marcar todas como pagas"}</button></div>`:"")+(fc?"":it.map(i=>{
       const sub=[t==="parcelado"?`${+i.atual+mi(M)-mi(i.ini)} de ${+i.total}`:"",i.cat||""].filter(Boolean).join(" · "),ic=ico(i);
       return `<div class="r ${pg(i)?"feito":""}"><span class="ic" style="background:${ic[1]}33">${ic[0]}</span>
         <button class="nome t" data-e="${esc(i.id)}"><span>${esc(i.nome)}</span>${sub?`<small>${esc(sub)}</small>`:""}</button>
@@ -403,10 +404,11 @@ $("leg").onclick=e=>{
   const b=e.target.closest("[data-e]"),c=e.target.closest("[data-c]");
   if(b)abrir(D.find(x=>x.id===b.dataset.e));
   else if(c){OP=OP===c.dataset.c?"":c.dataset.c;render()}};
-$("lista").addEventListener("click",e=>{const b=e.target.closest("[data-s]");if(b){FC[b.dataset.s]=!FC[b.dataset.s];render()}});
-$("sug").onclick=()=>{let n=0;
-  D.forEach(i=>{if(!i.cat&&i.tipo!=="entrada"&&i.tipo!=="cofrinho"){const c=guess(i.nome);if(c){i.cat=c;n++}}});
-  alert(n?n+" lançamentos categorizados pelo nome. Confira no Gráfico e ajuste o que precisar.":"Não consegui sugerir categoria para nenhum lançamento.");save()};
+$("lista").addEventListener("click",e=>{
+  const b=e.target.closest("[data-s]"),a=e.target.closest("[data-a]");
+  if(b){FC[b.dataset.s]=!FC[b.dataset.s];render()}
+  else if(a){const it=D.filter(i=>i.tipo===a.dataset.a&&ativo(i,M)),todos=it.every(i=>i.pg&&i.pg[M]);
+    it.forEach(i=>{i.pg=i.pg||{};if(todos)delete i.pg[M];else i.pg[M]=1});save()}});
 
 render();
 </script>

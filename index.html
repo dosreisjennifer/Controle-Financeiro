@@ -8,6 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Finanças">
 <link rel="apple-touch-icon" href="icone.png">
+<link rel="icon" href="icone.png">
 <title>Finanças</title>
 <style>
 :root{--bg:#FBFAFD;--g1:#E3DAFB;--card:#fff;--in:#F4F1FB;--ink:#1F1B2E;--soft:#767190;--line:#EBE7F5;--pos:#2E7D5B;--neg:#C2415F;--c1:#E4DBFB;--c2:#E8EBA8;--pill:#ffffffcc;--sel:#1f1b2e12;color-scheme:light dark}
@@ -36,6 +37,15 @@ h1 small{font:.8rem system-ui,sans-serif;letter-spacing:.08em;color:var(--soft)}
 .big{font-size:2.6rem;line-height:1.1;margin:2px 0 16px;font-weight:500}
 .c2 .big{font-size:1.9rem;margin-bottom:6px}
 .tres{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.salx{margin:-10px 0 14px;font-size:.85rem;color:var(--neg);font-weight:500}
+.salx:empty{display:none}
+.ynav{display:flex;align-items:center;justify-content:center;gap:18px;margin:0 0 14px}
+.ynav b{font-size:1.5rem;font-weight:500;min-width:70px;text-align:center}
+.ynav button{width:44px;height:44px;border:0;border-radius:50%;background:var(--card);font-size:1.5rem;color:var(--soft)}
+.mrow{width:100%;border:0}
+.mrow.cur{box-shadow:0 0 0 2px #9B8AE0}
+.mrow.vz{opacity:.5}
+.cap{text-transform:capitalize}
 .sh{display:flex;align-items:center;justify-content:space-between;margin:22px 0 10px}
 .sh .num{font-size:.95rem;color:var(--soft)}
 .all{display:flex;align-items:center;gap:12px;width:100%;border:0;border-radius:22px;background:var(--sel);padding:8px 16px;margin-bottom:10px;text-align:left}
@@ -61,13 +71,14 @@ h1 small{font:.8rem system-ui,sans-serif;letter-spacing:.08em;color:var(--soft)}
 .donut b{display:block;color:var(--ink);font-weight:500;font-size:1.05rem}
 .lgb{width:100%;border:0}
 .lgb em{font-style:normal;color:var(--soft)}
+.r.sel{box-shadow:0 0 0 2px #9B8AE0}
 .box{background:var(--card);border-radius:22px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 10px #5b4a9a0f}
 .mont{padding:16px}
 .mont small{display:block;color:var(--soft);font-size:.8rem}
 .mont b{display:block;font:500 2rem ui-serif,"New York",Georgia,serif;margin:2px 0}
 .lgb{scroll-margin-top:16px}
 .donut{position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.tip{position:absolute;transform:translate(-50%,-50%);border:0;border-radius:16px;padding:8px 12px;background:var(--card);color:var(--ink);box-shadow:0 6px 18px #5b4a9a45;font-weight:600;font-size:.85rem;white-space:nowrap;text-align:center;line-height:1.25}
+.tip{pointer-events:none;position:absolute;transform:translate(-50%,-50%);border:0;border-radius:16px;padding:8px 12px;background:var(--card);color:var(--ink);box-shadow:0 6px 18px #5b4a9a45;font-weight:600;font-size:.85rem;white-space:nowrap;text-align:center;line-height:1.25}
 .tip small{display:block;font-weight:400;color:var(--soft);font-size:.75rem}
 .an{background:var(--card);border-radius:22px;padding:16px;margin:0 0 14px;box-shadow:0 2px 10px #5b4a9a0f}
 .an h4{margin:0 0 10px;font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);font-weight:600}
@@ -90,7 +101,7 @@ h1 small{font:.8rem system-ui,sans-serif;letter-spacing:.08em;color:var(--soft)}
 .cfg{display:block;width:100%;text-align:left;border:0;background:var(--card);border-radius:22px;padding:16px;margin-bottom:10px}
 .cfg.neg{color:var(--neg)}
 #tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 12px);width:min(calc(100% - 28px),420px);display:flex;gap:4px;padding:8px;border-radius:999px;background:var(--pill);border:1px solid var(--line);box-shadow:0 10px 30px #5b4a9a2e;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:5}
-#tabs button{flex:1;border:0;background:none;border-radius:999px;padding:12px 0;display:flex;justify-content:center;align-items:center;gap:6px;color:var(--soft);font-size:.75rem;font-weight:600;white-space:nowrap}
+#tabs button{flex:1;border:0;background:none;border-radius:999px;min-width:0;padding:12px 0;display:flex;justify-content:center;align-items:center;gap:4px;color:var(--soft);font-size:.7rem;font-weight:600;white-space:nowrap}
 #tabs button.on{background:var(--sel);color:var(--ink);flex:2}
 #tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #tabs span{display:none}#tabs .on span{display:inline}
@@ -125,6 +136,7 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
     <div class="card c1">
       <small>Saldo</small>
       <div class="big num" id="saldo"></div>
+      <div class="salx" id="salx"></div>
       <div class="tres">
         <div><small>Entradas</small><span class="num" id="rec"></span></div>
         <div><small>A pagar</small><span class="num" id="pag"></span></div>
@@ -148,7 +160,21 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
     <div class="donut" id="donut"><div><span>Total<b class="num" id="dtot"></b></span></div><button class="tip" id="dtip" hidden></button></div>
     <div id="analise"></div>
     <div id="leg"></div>
-    <p class="dica" style="margin:10px 4px">Toque no gráfico ou numa categoria para ver os gastos dela; toque num gasto para editar. Não inclui entradas nem cofrinho.</p>
+    <p class="dica" style="margin:10px 4px">Toque numa cor do gráfico para ver o nome da categoria. Não inclui entradas nem cofrinho.</p>
+  </section>
+
+  <section data-t="ano">
+    <div class="ynav" id="ynav"><button data-y="-1" aria-label="Ano anterior">‹</button><b class="num" id="yr"></b><button data-y="1" aria-label="Próximo ano">›</button></div>
+    <div class="card c1">
+      <small>Saldo do ano</small>
+      <div class="big num" id="asaldo"></div>
+      <div class="tres">
+        <div><small>Entradas</small><span class="num" id="aent"></span></div>
+        <div><small>Saídas</small><span class="num" id="asai"></span></div>
+      </div>
+    </div>
+    <div id="meses"></div>
+    <p class="dica" style="margin:10px 4px">Toque num mês para abri-lo. Meses futuros mostram só o que já está lançado (fixas, parcelas e recorrentes).</p>
   </section>
 
   <section data-t="mais">
@@ -164,6 +190,7 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
   <button data-g="inicio" aria-label="Início"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg><span>Início</span></button>
   <button data-g="lanc" aria-label="Lançamentos"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 9h6M9 13h6M9 17h3"/></svg><span>Lançamentos</span></button>
   <button data-g="graf" aria-label="Gráfico"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg><span>Gráfico</span></button>
+  <button data-g="ano" aria-label="Resumo anual"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>Ano</span></button>
   <button data-g="mais" aria-label="Mais"><svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="18" cy="12" r="1"/></svg><span>Mais</span></button>
 </div>
 
@@ -258,15 +285,15 @@ function save(){
 function render(){
   const y=M.slice(0,4);
   $("mes").textContent=nmes(M,{month:"long",year:"numeric"});
-  $("tit").innerHTML=T==="mais"?"Mais":nmes(M,{month:"long"})+" <small>"+y+"</small>";
-  $("strip").hidden=T==="mais";$("novo").hidden=T==="mais"||T==="graf";
+  $("tit").innerHTML=T==="mais"?"Mais":T==="ano"?"Resumo anual":nmes(M,{month:"long"})+" <small>"+y+"</small>";
+  $("strip").hidden=T==="mais"||T==="ano";$("novo").hidden=T==="mais"||T==="graf"||T==="ano";
   $("strip").innerHTML=[-2,-1,0,1,2].map(d=>{const m=fm(mi(M)+d);return `<button data-m="${m}" class="${d?"":"on"}"><small>${m.slice(0,4)}</small><b>${nmes(m,{month:"short"}).replace(".","")}</b></button>`}).join("");
   document.querySelectorAll("[data-t]").forEach(s=>s.hidden=s.dataset.t!==T);
   document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.g===T));
   const L=D.filter(i=>ativo(i,M)),ent=i=>i.tipo==="entrada",pg=i=>!ent(i)&&i.pg&&i.pg[M];
   const s=f=>L.filter(f).reduce((t,i)=>t+val(i,M),0);
   const E=s(ent),S=s(i=>!ent(i)),pago=s(pg);
-  $("saldo").textContent=brl(E-pago);$("saldo").style.color=E-pago<0?"var(--neg)":"";
+  $("saldo").textContent=brl(E-pago);$("saldo").style.color=(E-pago<0||S>E)?"var(--neg)":"";$("salx").textContent=S>E?"Faltam "+brl(S-E)+" para cobrir tudo.":"";
   $("rec").textContent=brl(E);$("pag").textContent=brl(S-pago);
 
   // previsão do próximo mês
@@ -313,11 +340,17 @@ function render(){
   $("donut").style.background=TT?`conic-gradient(${cg})`:"var(--line)";
   const sel=OP&&G[OP];$("dtot").textContent=brl(TT);
   const tip=$("dtip"),zz=sel&&DA.find(q=>q[0]===OP);
-  if(zz){const th=(zz[1]+zz[2])*Math.PI;tip.style.left=(105+85*Math.sin(th))+"px";tip.style.top=(105-85*Math.cos(th))+"px";tip.innerHTML=`${CE[OP]||"🏷️"} ${esc(OP)}<small>${brl(G[OP].v)} · ver gastos ›</small>`;tip.hidden=false}else tip.hidden=true;
-  $("leg").innerHTML=A.length?A.map(([c,g])=>{
-    const op=OP===c,n=g.it.length;
-    return `<button class="r lgb" data-c="${esc(c)}"><span class="ic" style="background:${cor(c)}33">${CE[c]||"🏷️"}</span><span class="t"><span>${esc(c)}</span><small>${n} ${n>1?"lançamentos":"lançamento"} · ${Math.round(g.v/TT*100)}%</small></span><b class="num">${brl(g.v)}</b><em>${op?"▾":"▸"}</em></button>`+
-    (op?`<div class="det">`+g.it.sort((a,b)=>val(b,M)-val(a,M)).map(i=>`<button class="di" data-e="${esc(i.id)}"><span>${esc(i.nome)}<small>${SN[i.tipo]}${i.tipo==="parcelado"?" · "+(+i.atual+mi(M)-mi(i.ini))+" de "+(+i.total):""}</small></span><b class="num neg">${brl(val(i,M))}</b></button>`).join("")+`</div>`:"")}).join(""):`<p class="vazio">Sem gastos neste mês.</p>`;
+  if(zz){const th=(zz[1]+zz[2])*Math.PI;tip.style.left=(105+85*Math.sin(th))+"px";tip.style.top=(105-85*Math.cos(th))+"px";tip.innerHTML=`${CE[OP]||"🏷️"} ${esc(OP)}<small>${brl(G[OP].v)} · ${Math.round(G[OP].v/TT*100)}%</small>`;tip.hidden=false}else tip.hidden=true;
+  $("leg").innerHTML=A.length?A.map(([c,g])=>{const n=g.it.length;
+    return `<div class="r${OP===c?" sel":""}"><span class="ic" style="background:${cor(c)}33">${CE[c]||"🏷️"}</span><span class="t"><span>${esc(c)}</span><small>${n} ${n>1?"lançamentos":"lançamento"} · ${Math.round(g.v/TT*100)}%</small></span><b class="num">${brl(g.v)}</b></div>`}).join(""):`<p class="vazio">Sem gastos neste mês.</p>`;
+
+  // resumo anual
+  $("yr").textContent=AY;
+  let tE=0,tS=0;
+  $("meses").innerHTML=Array.from({length:12},(_,k)=>{
+    const m=AY+"-"+String(k+1).padStart(2,"0"),e=soma(m,ent),sa=soma(m,i=>!ent(i)),vz=!e&&!sa;tE+=e;tS+=sa;
+    return `<button class="r mrow ${m===M?"cur":""} ${vz?"vz":""}" data-mm="${m}"><span class="t"><span class="cap">${nmes(m,{month:"long"})}</span><small>${vz?"Sem lançamentos":"Entradas "+brl(e)+" · Saídas "+brl(sa)}</small></span>${vz?"":`<b class="num ${e-sa<0?"neg":"pos"}">${brl(e-sa)}</b>`}</button>`}).join("");
+  $("aent").textContent=brl(tE);$("asai").textContent=brl(tS);$("asaldo").textContent=brl(tE-tS);$("asaldo").style.color=tE-tS<0?"var(--neg)":"";
 
   // análise do mês (enxuta)
   const cart=s(i=>i.tipo==="cartao"),parc=s(i=>i.tipo==="parcelado"),dv=s(i=>!ent(i)&&i.cat==="Dívida"),semc=L.filter(i=>!ent(i)&&i.tipo!=="cofrinho"&&!i.cat).length;
@@ -334,7 +367,7 @@ function render(){
   $("analise").innerHTML=TT||E?`<div class="an"><h4>Análise do mês</h4>`+(E?`<div class="term"><b>${pct}%</b><span>da renda comprometida · ${rot}</span></div><div class="bar"><i style="width:${Math.min(pct,100)}%;background:${cl}"></i></div>`:"")+`<ul>${(al.length?al.slice(0,3):["Nada preocupante neste mês."]).concat(fimP?[fimP]:[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:"";
 }
 
-$("tabs").onclick=e=>{const b=e.target.closest("[data-g]");if(b){T=b.dataset.g;scrollTo(0,0);render()}};
+$("tabs").onclick=e=>{const b=e.target.closest("[data-g]");if(b){T=b.dataset.g;if(T==="ano")AY=+M.slice(0,4);scrollTo(0,0);render()}};
 $("lista").onclick=e=>{
   const k=e.target.closest("[data-k]"),b=e.target.closest("[data-e]");
   if(k){const i=D.find(x=>x.id===k.dataset.k);i.pg=i.pg||{};
@@ -452,10 +485,10 @@ $("fimp").onsubmit=e=>{
   $("dimp").close();
   if(n){M=f;T="lanc";save()}};
 
-let OP="",OR="",FC={},CF="",DA=[];
-const irLista=()=>{const el=[...$("leg").querySelectorAll("[data-c]")].find(b=>b.dataset.c===OP);if(el)el.scrollIntoView({behavior:"smooth",block:"start"})};
+let OP="",OR="",FC={},CF="",DA=[],AY=+M.slice(0,4);
+$("ynav").onclick=e=>{const b=e.target.closest("[data-y]");if(b){AY+=+b.dataset.y;render()}};
+$("meses").onclick=e=>{const b=e.target.closest("[data-mm]");if(b){M=b.dataset.mm;T="inicio";scrollTo(0,0);render()}};
 $("donut").onclick=e=>{
-  if(e.target.closest("#dtip")){irLista();return}
   const r=$("donut").getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,d=Math.hypot(dx,dy);
   if(d>r.width/2)return;
   if(d<r.width*.31){OP="";render();return}
@@ -480,10 +513,6 @@ $("resumo").onclick=e=>{
   if(b)abrir(D.find(x=>x.id===b.dataset.e));
   else if(r){OR=OR===r.dataset.r?"":r.dataset.r;render()}};
 $("strip").onclick=e=>{const b=e.target.closest("[data-m]");if(b){M=b.dataset.m;render()}};
-$("leg").onclick=e=>{
-  const b=e.target.closest("[data-e]"),c=e.target.closest("[data-c]");
-  if(b)abrir(D.find(x=>x.id===b.dataset.e));
-  else if(c){OP=OP===c.dataset.c?"":c.dataset.c;render()}};
 $("lista").addEventListener("click",e=>{
   const b=e.target.closest("[data-s]"),a=e.target.closest("[data-a]"),f=e.target.closest("[data-cf]"),d=e.target.closest("[data-d]");
   if(b){FC[b.dataset.s]=!FC[b.dataset.s];render()}
